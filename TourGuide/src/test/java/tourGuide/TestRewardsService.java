@@ -6,6 +6,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 
 import org.junit.BeforeClass;
 import org.junit.Ignore;
@@ -23,6 +24,10 @@ import tourGuide.user.User;
 import tourGuide.user.UserReward;
 
 public class TestRewardsService {
+
+	@Autowired
+	private GpsUtil gpsUtil;
+
 	@BeforeClass
 	public static void setUpAllTests() {
 		Locale.setDefault(Locale.US);
@@ -39,7 +44,13 @@ public class TestRewardsService {
 		User user = new User(UUID.randomUUID(), "jon", "000", "jon@tourGuide.com");
 		Attraction attraction = gpsUtil.getAttractions().get(0);
 		user.addToVisitedLocations(new VisitedLocation(user.getUserId(), attraction, new Date()));
-		VisitedLocation visitedLocation = tourGuideService.trackUserLocation(user);
+		tourGuideService.trackUserLocation(user);
+		while (user.getUserRewards().isEmpty()) {
+			try {
+				TimeUnit.MILLISECONDS.sleep(200);
+			} catch (InterruptedException e) {
+			}
+		}
 		List<UserReward> userRewards = user.getUserRewards();
 		tourGuideService.tracker.stopTracking();
 		assertTrue(userRewards.size() == 1);
@@ -61,8 +72,12 @@ public class TestRewardsService {
 
 		InternalTestHelper.setInternalUserNumber(1);
 		TourGuideService tourGuideService = new TourGuideService(gpsUtil, rewardsService);
-		
+
 		rewardsService.calculateRewards(tourGuideService.getAllUsers().get(0));
+		try {
+			TimeUnit.MILLISECONDS.sleep(1000);
+		} catch (InterruptedException e) {
+		}
 		List<UserReward> userRewards = tourGuideService.getUserRewards(tourGuideService.getAllUsers().get(0));
 		tourGuideService.tracker.stopTracking();
 
