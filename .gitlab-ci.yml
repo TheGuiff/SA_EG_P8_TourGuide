@@ -1,1 +1,15 @@
+image: java:8-jdk
+stages: # List of stages for jobs, and their order of execution
+  - build
+  - test
 
+build:
+  stage: build
+  script:
+    - echo "Compiling the code..."
+    - echo "Compile complete."
+ 
+tests:   
+  stage: test
+  script:
+    - echo "Running unit tests..."
